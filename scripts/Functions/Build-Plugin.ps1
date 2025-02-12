@@ -3,15 +3,12 @@ function Build-Plugin {
     Push-Location "../"
 
     # If node_modules folder is not present then install the dependencies
-    if(!(Test-Path "node_modules")) 
+    if(!(Test-Path "node_modules"))
     {
         Write-Host "Install module dependencies."
         npm install
     }
 
-    # Compile the Agent Description
-    Write-Host "Compile the Agent Description."
-    tsp compile .
     # Compile the Agent Description
     Write-Host "Compile the Agent Description."
     tsp compile .
@@ -28,10 +25,10 @@ function Build-Plugin {
             if ($_.Name -eq "openapi.json") {
                 $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
                 $GeneratedName = $json.actions[0].file
-                $PluginName = $GeneratedName.Split('-')[0]   
+                $PluginName = $GeneratedName.Split('-')[0]
             } else {
                 $FileName = $_.BaseName.Split('.')
-                $PluginName = $FileName[$FileName.Length - 1]   
+                $PluginName = $FileName[$FileName.Length - 1]
             }
 
             Write-Host "Calling Kiota for the first time. Adding plugin $PluginName."
@@ -43,7 +40,7 @@ function Build-Plugin {
     kiota plugin generate --refresh
 
     # Move the generated manifests and matching OpenAPI files to the appPackage folder
-    Copy-Item -Path ".generated/plugins/*/*" -Destination "appPackage" -Force
+    Copy-Item -Path ".generated/plugins/*/*" -Destination "appPackage" -Force -ErrorAction SilentlyContinue
     Copy-Item -Path ".generated/declarativeAgent.json" -Destination "appPackage" -Force
     Pop-Location
 }

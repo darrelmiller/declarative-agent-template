@@ -15,15 +15,15 @@ try
 
     # Builds the Plugin
     Build-Plugin
-    
+
     # Pops the initial directory from the stack
     Pop-Location
 }
-catch 
+catch
 {
     Write-Host "Error: $_"
 }
-finally 
+finally
 {
     Set-Location $CurrentLocation
 }
