@@ -21,18 +21,21 @@ function Build-Plugin {
     {
         # TODO: Fix single plugin generation because no namespace is generated and file reference in declarativeAgent.json will be wrong
         # for now, special case $PluginName when file is named openapi.json
-        Get-ChildItem -Path ".generated/openapi" -Filter "openapi*.json" | ForEach-Object {
-            if ($_.Name -eq "openapi.json") {
-                $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
-                $GeneratedName = $json.actions[0].file
-                $PluginName = $GeneratedName.Split('-')[0]
-            } else {
-                $FileName = $_.BaseName.Split('.')
-                $PluginName = $FileName[$FileName.Length - 1]
-            }
+        $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
+        if($json.actions.Length -gt 0) {
+            Get-ChildItem -Path ".generated/openapi" -Filter "openapi*.json" | ForEach-Object {
+                if ($_.Name -eq "openapi.json") {
+                    $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
+                    $GeneratedName = $json.actions[0].file
+                    $PluginName = $GeneratedName.Split('-')[0]
+                } else {
+                    $FileName = $_.BaseName.Split('.')
+                    $PluginName = $FileName[$FileName.Length - 1]
+                }
 
-            Write-Host "Calling Kiota for the first time. Adding plugin $PluginName."
-            kiota plugin add -d $_.FullName --plugin-name $PluginName --output .generated/plugins/$PluginName --type apiplugin
+                Write-Host "Calling Kiota for the first time. Adding plugin $PluginName."
+                kiota plugin add -d $_.FullName --plugin-name $PluginName --output .generated/plugins/$PluginName --type apiplugin
+            }
         }
     }
 
