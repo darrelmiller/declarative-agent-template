@@ -13,17 +13,19 @@ function Build-Plugin {
     Write-Host "Compile the Agent Description."
     tsp compile .
 
-    # Use kiota to produce all of the plugin manifests
-    $Env:KIOTA_CONFIG_PREVIEW = "true"
-    $KiotaDirNotExists = !(Test-Path ".kiota")
-    # TODO: Replace this first time step with the emitter for workspace.json
-    if($KiotaDirNotExists) # Create a Kiota workspace
-    {
-        # TODO: Fix single plugin generation because no namespace is generated and file reference in declarativeAgent.json will be wrong
-        # for now, special case $PluginName when file is named openapi.json
-        $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
-        if($json.actions.Length -gt 0) {
-            Get-ChildItem -Path ".generated/openapi" -Filter "openapi*.json" | ForEach-Object {
+    # Check for Actions in the Declarative Agent
+    $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
+    if($json.actions.Length -gt 0) {
+
+        # Use kiota to produce all of the plugin manifests
+        $Env:KIOTA_CONFIG_PREVIEW = "true"
+        $KiotaDirNotExists = !(Test-Path ".kiota")
+        # TODO: Replace this first time step with the emitter for workspace.json
+        if($KiotaDirNotExists) # Create a Kiota workspace
+        {
+            # TODO: Fix single plugin generation because no namespace is generated and file reference in declarativeAgent.json will be wrong
+            # for now, special case $PluginName when file is named openapi.json
+                Get-ChildItem -Path ".generated/openapi" -Filter "openapi*.json" | ForEach-Object {
                 if ($_.Name -eq "openapi.json") {
                     $json = Get-Content -Path ".generated/declarativeAgent.json" | ConvertFrom-Json
                     $GeneratedName = $json.actions[0].file
@@ -37,10 +39,10 @@ function Build-Plugin {
                 kiota plugin add -d $_.FullName --plugin-name $PluginName --output .generated/plugins/$PluginName --type apiplugin
             }
         }
-    }
 
-    Write-Host "Calling Kiota to refresh artifacts for all plugins described in workspace file."
-    kiota plugin generate --refresh
+        Write-Host "Calling Kiota to refresh artifacts for all plugins described in workspace file."
+        kiota plugin generate --refresh
+    }
 
     # Move the generated manifests and matching OpenAPI files to the appPackage folder
     Copy-Item -Path ".generated/plugins/*/*" -Destination "appPackage" -Force -ErrorAction SilentlyContinue
